@@ -84,7 +84,8 @@ class Client(ZaloAPI):
     def onMessage(self, mid , author_id, message, message_object, thread_id, thread_type):
         # thread_id = 6973176668452888712
         try: 
-            if thread_id not in THREAD_ID:
+            print(f"equa :  {thread_id not in THREAD_ID} -   thread id : {thread_id} ")
+            if int(thread_id) not in THREAD_ID:
                 return
             
             if isinstance(message, list):
