@@ -3,7 +3,8 @@ from bot import BOT
 from zlapi import ZaloAPI
 from colorama import Fore, Style, init
 from zlapi.models import GroupEventType,ThreadType
-from UserCard import UserCard
+from zlapi._message import Message, MessageStyle
+from UserCard2 import UserCard
 from datetime import datetime
 import time
 
@@ -43,37 +44,48 @@ class Client(ZaloAPI):
             #         f"- event_type: {Fore.MAGENTA}{Style.BRIGHT}{event_type} {Style.NORMAL}\n"
             #         f"{Fore.GREEN}{Style.BRIGHT}------------------------------\n"
             #     )
+            if int(event_data['groupId']) not in THREAD_ID:
+                return
+            
             if(event_type == GroupEventType.REMOVE_MEMBER):
 
                 user_data = self.fetchUserInfo([member['id'] for member in event_data['updateMembers']][0])
                 profile = user_data.changed_profiles[[member['id'] for member in event_data['updateMembers']][0]]
-                display_name = profile.get("displayName", "Không có tên hiển thị")
-                avatar = profile.get("avatar", "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_neytiri_16x9_1098_01_0e7d844a.jpeg?region=420%2C0%2C1080%2C1080")
-                lastActionTime = self.convert_timestamp(profile.get("lastActionTime", f"{time.time()}"))
-                lastUpdateTime = self.convert_timestamp(profile.get("lastUpdateTime", f"{time.time()}"))
-                sdob = profile.get("sdob", "1/1/2000")
+                name = profile.get("displayName", "Không có tên hiển thị")
+                gender = "Nam" if profile.get("gender") == 0 else "Nữ" if profile.get("gender") == 1 else "Không thể hiển thị"
+                join_date = self.convert_timestamp(profile.get("createdTs", f"{time.time()}"))
+                last_action = self.convert_timestamp(profile.get("lastActionTime", f"{time.time()}"))
+                avatar_url = profile.get("avatar", "https://s120-ava-talk.zadn.vn/6/7/b/a/5/120/dea575169b69d38a56ea9527d7048806.jpg")
+                group_name = event_data.groupName
+                footer_text = f"{name} vừa cút \n nhóm {group_name}"
+                business = profile.get("oaInfo", "Không thể hiển thị")
 
-                user_card = UserCard(f"Tạm biệt, {display_name}", sdob, lastUpdateTime, lastActionTime, event_data["groupName"], avatar, f"{display_name} vừa rời khỏi nhóm \n {event_data.groupName} ")
+                user_card = UserCard(name, gender, join_date, last_action,business ,group_name, avatar_url, footer_text)
                 user_card.create_card()
-                print(f"display_name : {display_name} - avatar : {avatar} - lastActionTime : {lastActionTime} - lastUpdateTime : {lastUpdateTime} - sdob : {sdob}")
-
-                self.sendLocalImage("user_card.png", event_data['groupId'], ThreadType.GROUP, width = 2000, height = 800)
+                #print(f"display_name : {display_name} - avatar : {avatar} - lastActionTime : {lastActionTime} - lastUpdateTime : {lastUpdateTime} - sdob : {sdob}")
+                style = MessageStyle(offset=5, length=10, style="bold")
+                message = Message(text=f"Thằng khốn {name} | vừa bị đá khỏi nhóm do ngu", style=style)
+                self.sendLocalImage("user_card.png", event_data['groupId'], ThreadType.GROUP, width = 2000, height = 800, message=message)
 
             elif(event_type == GroupEventType.JOIN):
                 user_data = self.fetchUserInfo([member['id'] for member in event_data['updateMembers']][0])
                 profile = user_data.changed_profiles[[member['id'] for member in event_data['updateMembers']][0]]
-                display_name = profile.get("displayName", "Không có tên hiển thị")
-                avatar = profile.get("avatar", "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_neytiri_16x9_1098_01_0e7d844a.jpeg?region=420%2C0%2C1080%2C1080")
-                lastActionTime = self.convert_timestamp(profile.get("lastActionTime", f"{time.time()}"))
-                lastUpdateTime = self.convert_timestamp(profile.get("lastUpdateTime", f"{time.time()}"))
-                sdob = profile.get("sdob", "1/1/2000")
+                name = profile.get("displayName", "Không có tên hiển thị")
+                gender = "Nam" if profile.get("gender") == 0 else "Nữ" if profile.get("gender") == 1 else "Không thể hiển thị"
+                join_date = self.convert_timestamp(profile.get("createdTs", f"{time.time()}"))
+                last_action = self.convert_timestamp(profile.get("lastActionTime", f"{time.time()}"))
+                avatar_url = profile.get("avatar", "https://s120-ava-talk.zadn.vn/6/7/b/a/5/120/dea575169b69d38a56ea9527d7048806.jpg")
+                group_name = event_data.groupName
+                footer_text = f"{name} vừa Tham gia \n nhóm {group_name}"
+                business = profile.get("oaInfo", "Không thể hiển thị")
 
-                user_card = UserCard(f"Chào mừng, {display_name}", sdob, lastUpdateTime, lastActionTime, event_data["groupName"], avatar, f"{display_name} vừa Tham gia vào \n nhóm {event_data.groupName}")
+                user_card = UserCard(name, gender, join_date, last_action,business ,group_name, avatar_url, footer_text)
                 user_card.create_card()
 
-                print(f"display_name : {display_name} - avatar : {avatar} - lastActionTime : {lastActionTime} - lastUpdateTime : {lastUpdateTime} - sdob : {sdob}")
-
-                self.sendLocalImage("user_card.png", event_data['groupId'], ThreadType.GROUP, width = 2000, height = 800)
+                #print(f"display_name : {display_name} - avatar : {avatar} - lastActionTime : {lastActionTime} - lastUpdateTime : {lastUpdateTime} - sdob : {sdob}")
+                style = MessageStyle(offset=5, length=10, style="bold")
+                message = Message(text=f"Thượng đế {name} | Vừa tham gia group {group_name}", style=style)
+                self.sendLocalImage("user_card.png", event_data['groupId'], ThreadType.GROUP, width = 2000, height = 800, message=message)
 
         except Exception as e :
             print(f"error in on lisstion : {e}")
@@ -84,7 +96,7 @@ class Client(ZaloAPI):
     def onMessage(self, mid , author_id, message, message_object, thread_id, thread_type):
         # thread_id = 6973176668452888712
         try: 
-            print(f"equa :  {thread_id not in THREAD_ID} -   thread id : {thread_id} ")
+            #print(f"equa :  {thread_id not in THREAD_ID} -   thread id : {thread_id} ")
             if int(thread_id) not in THREAD_ID:
                 return
             

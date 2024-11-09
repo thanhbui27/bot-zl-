@@ -117,7 +117,7 @@ class BOT:
             self.handle_check_num_massage(author_id, message, message_object, thread_id, thread_type)
         except Exception as e : 
             print(f"error in handle_remove_message_send_link : {e} \n" )
-
+    
     def handle_check_num_massage(self, author_id, message, message_object, thread_id, thread_type):
         try:
             if isinstance(message, list):
